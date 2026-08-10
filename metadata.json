@@ -1,0 +1,6 @@
+{
+  "name": "Koshari Hind Restaurant",
+  "description": "تطبيق كشري هند للطلبات أونلاين مع لوحة تحكم كاملة، إدارة المنيو، نظام الطلبات والتقارير المباشرة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
