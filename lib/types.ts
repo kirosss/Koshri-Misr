@@ -84,4 +84,10 @@ export interface BranchSettings {
   estimatedDeliveryTime: string; // e.g. "25-35 دقيقة"
   acceptingOrders: boolean;
   closingMessage?: string;
+  // Hero banner card settings
+  heroCardImage?: string;
+  heroCardBadge?: string;
+  heroCardTitle?: string;
+  heroCardDesc?: string;
+  heroCardPrice?: string;
 }

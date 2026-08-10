@@ -85,22 +85,26 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         {/* Right Bento Visual Card */}
         <div className="w-full md:w-80 h-64 md:h-80 rounded-[2rem] bg-slate-900 text-white p-6 relative overflow-hidden flex flex-col justify-between shadow-lg shrink-0">
           <img
-            src="https://images.unsplash.com/photo-1541518763669-27fef04b14da?auto=format&fit=crop&q=80&w=800"
-            alt="طبق كشري هند"
+            src={branchSettings.heroCardImage || "https://images.unsplash.com/photo-1541518763669-27fef04b14da?auto=format&fit=crop&q=80&w=800"}
+            alt={branchSettings.heroCardTitle || "كشري هند الخصوصي"}
             className="absolute inset-0 w-full h-full object-cover opacity-35"
           />
           <div className="relative z-10">
             <span className="bg-orange-500 text-white font-extrabold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-2">
-              الأكثر مبيعاً 🔥
+              {branchSettings.heroCardBadge || "الأكثر مبيعاً 🔥"}
             </span>
-            <h3 className="text-xl font-black">كشري هند الخصوصي</h3>
-            <p className="text-xs text-slate-300 mt-1">حمص، عدس أصلي، تقلية مقرمشة، وصلصة هند المسبكة</p>
+            <h3 className="text-xl font-black">{branchSettings.heroCardTitle || "كشري هند الخصوصي"}</h3>
+            <p className="text-xs text-slate-300 mt-1 line-clamp-2">
+              {branchSettings.heroCardDesc || "حمص، عدس أصلي، تقلية مقرمشة، وصلصة هند المسبكة"}
+            </p>
           </div>
 
           <div className="relative z-10 flex items-center justify-between pt-4 border-t border-slate-800">
             <div>
-              <span className="text-[10px] text-slate-400 block font-bold">السعر الاصلي</span>
-              <span className="text-xl font-black text-amber-400">45 ج.م</span>
+              <span className="text-[10px] text-slate-400 block font-bold">السعر الأصلي</span>
+              <span className="text-xl font-black text-amber-400">
+                {branchSettings.heroCardPrice || "45"} ج.م
+              </span>
             </div>
             <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-white font-extrabold text-xl">
               🍜

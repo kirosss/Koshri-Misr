@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRestaurant } from '@/context/RestaurantContext';
+import { compressImageFile } from '@/lib/image-compression';
 import {
   Settings,
   Power,
@@ -14,6 +15,10 @@ import {
   CheckCircle2,
   Save,
   RotateCcw,
+  Upload,
+  Image as ImageIcon,
+  Sparkles,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 export const SettingsManager: React.FC = () => {
@@ -31,6 +36,25 @@ export const SettingsManager: React.FC = () => {
   const [newCouponPercent, setNewCouponPercent] = useState(15);
   const [newCouponMin, setNewCouponMin] = useState(50);
   const [savedFeedback, setSavedFeedback] = useState(false);
+  const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploadingHeroImage(true);
+      const compressedBase64 = await compressImageFile(file, 900, 0.8);
+      setFormSettings((prev) => ({
+        ...prev,
+        heroCardImage: compressedBase64,
+      }));
+    } catch (err) {
+      console.error('Error compressing image:', err);
+    } finally {
+      setIsUploadingHeroImage(false);
+    }
+  };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,10 +222,116 @@ export const SettingsManager: React.FC = () => {
             </div>
           </div>
 
+          {/* Hero Banner Card Management Section */}
+          <div className="mt-6 pt-6 border-t border-slate-200 space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                التحكم في صورة وكارت الواجهة الرئيسية (Hero Card)
+              </h4>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-4">
+              {/* Image Preview & Upload */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-2">صورة الكارت البارز في الواجهة</label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="w-28 h-28 rounded-2xl bg-slate-900 overflow-hidden relative border border-slate-300 shrink-0 shadow-sm">
+                    {formSettings.heroCardImage ? (
+                      <img
+                        src={formSettings.heroCardImage}
+                        alt="Hero preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs p-2 text-center">
+                        <ImageIcon className="w-6 h-6 mb-1 text-slate-500" />
+                        <span>لا توجد صورة</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-amber-300 hover:bg-slate-800 font-extrabold text-xs cursor-pointer transition-colors shadow-xs">
+                      <Upload className="w-4 h-4 text-amber-400" />
+                      <span>{isUploadingHeroImage ? 'جاري التحميل...' : 'رفع صورة من جهازك 🖼️'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleHeroImageUpload}
+                        disabled={isUploadingHeroImage}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">أو ضع رابط صورة مباشر (URL)</label>
+                      <input
+                        type="text"
+                        value={formSettings.heroCardImage || ''}
+                        onChange={(e) => setFormSettings({ ...formSettings, heroCardImage: e.target.value })}
+                        placeholder="https://example.com/koshari-hero.jpg"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white text-slate-800 font-mono"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Text Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">الشارة الترويجية (Badge)</label>
+                  <input
+                    type="text"
+                    value={formSettings.heroCardBadge || ''}
+                    onChange={(e) => setFormSettings({ ...formSettings, heroCardBadge: e.target.value })}
+                    placeholder="الأكثر مبيعاً 🔥"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">عنوان الطبق / الوجبة</label>
+                  <input
+                    type="text"
+                    value={formSettings.heroCardTitle || ''}
+                    onChange={(e) => setFormSettings({ ...formSettings, heroCardTitle: e.target.value })}
+                    placeholder="كشري هند الخصوصي"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">السعر المعروض (ج.م)</label>
+                  <input
+                    type="text"
+                    value={formSettings.heroCardPrice || ''}
+                    onChange={(e) => setFormSettings({ ...formSettings, heroCardPrice: e.target.value })}
+                    placeholder="45"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">وصف المكونات المختصر</label>
+                <input
+                  type="text"
+                  value={formSettings.heroCardDesc || ''}
+                  onChange={(e) => setFormSettings({ ...formSettings, heroCardDesc: e.target.value })}
+                  placeholder="حمص، عدس أصلي، تقلية مقرمشة، وصلصة هند المسبكة"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="pt-3">
             <button
               type="submit"
-              className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md"
+              className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <Save className="w-4 h-4 text-slate-950" />
               <span>حفظ الإعدادات</span>

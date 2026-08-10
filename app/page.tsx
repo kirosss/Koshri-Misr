@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { RestaurantProvider, useRestaurant } from '@/context/RestaurantContext';
 import { Navbar } from '@/components/Navbar';
 import { HeroBanner } from '@/components/CustomerView/HeroBanner';
@@ -12,7 +12,7 @@ import { CheckoutModal } from '@/components/CustomerView/CheckoutModal';
 import { OrderTrackerModal } from '@/components/CustomerView/OrderTrackerModal';
 
 import { MenuItem, CategoryType } from '@/lib/types';
-import { ShoppingBag, Phone, MapPin, Clock, Flame, ChevronLeft } from 'lucide-react';
+import { ShoppingBag, Phone, MapPin, Clock, Flame, ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal } from 'lucide-react';
 
 function AppContent() {
   const {
@@ -32,6 +32,17 @@ function AppContent() {
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+
+  // Mobile layout state ('carousel' by default on mobile)
+  const [mobileLayoutMode, setMobileLayoutMode] = useState<'carousel' | 'grid'>('carousel');
+  const mobileCarouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollMobileCarousel = (direction: 'left' | 'right') => {
+    if (mobileCarouselRef.current) {
+      const scrollAmount = direction === 'right' ? 280 : -280;
+      mobileCarouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Category items count
   const categoryCounts = menu.reduce((acc, item) => {
@@ -85,31 +96,107 @@ function AppContent() {
           )}
 
           {/* Menu Items Grid Header */}
-          <div className="flex items-center justify-between my-4">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              {selectedCategory === 'all' ? 'كافة الأصناف والأطباق' : 'أطباق قسم ' + selectedCategory}
-            </h2>
-            <span className="text-xs text-slate-600 font-bold bg-slate-200/80 px-3 py-1 rounded-full">
-              {filteredItems.length} صنف متوفر
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-2 my-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                {selectedCategory === 'all' ? 'كافة الأصناف والأطباق' : 'أطباق قسم ' + selectedCategory}
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                تصفح أشهى وجبات الكشري والطواجن
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600 font-bold bg-slate-200/80 px-3 py-1 rounded-full">
+                {filteredItems.length} صنف متوفر
+              </span>
+
+              {/* Mobile Carousel Controls & Toggle */}
+              <div className="flex sm:hidden items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-2xl shadow-xs">
+                <button
+                  onClick={() => setMobileLayoutMode(mobileLayoutMode === 'carousel' ? 'grid' : 'carousel')}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
+                    mobileLayoutMode === 'carousel' ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-700'
+                  }`}
+                  title="تغيير طريقة العرض"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>{mobileLayoutMode === 'carousel' ? 'كاروسيل 🎠' : 'شبكة 📱'}</span>
+                </button>
+
+                {mobileLayoutMode === 'carousel' && (
+                  <div className="flex items-center gap-1 pr-1 border-r border-slate-200">
+                    <button
+                      onClick={() => scrollMobileCarousel('right')}
+                      className="p-1.5 rounded-lg bg-slate-100 text-slate-800 hover:bg-orange-500 hover:text-white transition-colors cursor-pointer"
+                      title="التالي"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => scrollMobileCarousel('left')}
+                      className="p-1.5 rounded-lg bg-slate-100 text-slate-800 hover:bg-orange-500 hover:text-white transition-colors cursor-pointer"
+                      title="السابق"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Menu Grid */}
+          {/* Menu Items Rendering */}
           {filteredItems.length === 0 ? (
             <div className="py-16 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 shadow-xs">
               <p className="font-bold text-base mb-1">لا توجد نتائج تطابق &quot;{searchQuery}&quot;</p>
               <p className="text-xs text-slate-400">جرب البحث بكلمة مختلفة أو اختر قسم آخر من المنيو</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {filteredItems.map((item) => (
-                <MenuItemCard
-                  key={item.id}
-                  item={item}
-                  onSelect={(i) => setCustomizingItem(i)}
-                />
-              ))}
-            </div>
+            <>
+              {/* Desktop Grid (sm and above) */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {filteredItems.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    onSelect={(i) => setCustomizingItem(i)}
+                  />
+                ))}
+              </div>
+
+              {/* Mobile View (Below sm) */}
+              <div className="block sm:hidden">
+                {mobileLayoutMode === 'carousel' ? (
+                  <div
+                    ref={mobileCarouselRef}
+                    className="flex items-stretch gap-4 overflow-x-auto snap-x snap-mandatory pb-4 pt-1 px-1 no-scrollbar scroll-smooth w-full"
+                  >
+                    {filteredItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="w-[82vw] max-w-[300px] shrink-0 snap-center flex flex-col"
+                      >
+                        <MenuItemCard
+                          item={item}
+                          onSelect={(i) => setCustomizingItem(i)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {filteredItems.map((item) => (
+                      <MenuItemCard
+                        key={item.id}
+                        item={item}
+                        onSelect={(i) => setCustomizingItem(i)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
         </div>

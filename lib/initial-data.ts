@@ -12,6 +12,11 @@ export const INITIAL_BRANCH_SETTINGS: BranchSettings = {
   estimatedDeliveryTime: '25 - 35 دقيقة',
   acceptingOrders: true,
   closingMessage: 'نعتذر، المطعم مغلق حالياً. يسعدنا استقبال طلباتكم في أوقات العمل من 10 صباحاً حتى 2 صباحاً.',
+  heroCardImage: 'https://images.unsplash.com/photo-1541518763669-27fef04b14da?auto=format&fit=crop&q=80&w=800',
+  heroCardBadge: 'الأكثر مبيعاً 🔥',
+  heroCardTitle: 'كشري هند الخصوصي',
+  heroCardDesc: 'حمص، عدس أصلي، تقلية مقرمشة، وصلصة هند المسبكة',
+  heroCardPrice: '45',
 };
 
 export const INITIAL_COUPONS: Coupon[] = [
