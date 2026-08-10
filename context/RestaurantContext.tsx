@@ -20,6 +20,7 @@ import {
   INITIAL_COUPONS,
   INITIAL_SEED_ORDERS,
 } from '@/lib/initial-data';
+import { saveToIDB, getFromIDB } from '@/lib/db-storage';
 
 interface RestaurantContextType {
   // Navigation State
@@ -84,67 +85,143 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [adminTab, setAdminTab] = useState<'overview' | 'orders' | 'menu' | 'reports' | 'settings'>('overview');
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState<boolean>(false);
 
-  // Core States initialized with safety check
+  // Core States
   const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
   const [orders, setOrders] = useState<Order[]>(INITIAL_SEED_ORDERS);
   const [branchSettings, setBranchSettings] = useState<BranchSettings>(INITIAL_BRANCH_SETTINGS);
   const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  const [isStorageLoaded, setIsStorageLoaded] = useState<boolean>(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [lastPlacedOrder, setLastPlacedOrder] = useState<Order | null>(null);
 
-  // Load state from LocalStorage on client mount
+  // Load from localStorage / IndexedDB after mount to prevent SSR hydration mismatches
   useEffect(() => {
-    try {
-      const savedMenu = localStorage.getItem(STORAGE_KEY_MENU);
-      if (savedMenu) setMenu(JSON.parse(savedMenu));
+    let isMounted = true;
 
-      const savedOrders = localStorage.getItem(STORAGE_KEY_ORDERS);
-      if (savedOrders) setOrders(JSON.parse(savedOrders));
+    async function loadSavedData() {
+      try {
+        // 1. Menu
+        let loadedMenu: MenuItem[] | null = null;
+        const savedMenuStr = localStorage.getItem(STORAGE_KEY_MENU);
+        if (savedMenuStr) {
+          try { loadedMenu = JSON.parse(savedMenuStr); } catch {}
+        }
+        if (!loadedMenu) {
+          loadedMenu = await getFromIDB<MenuItem[]>(STORAGE_KEY_MENU);
+        }
+        if (loadedMenu && loadedMenu.length > 0 && isMounted) {
+          setMenu(loadedMenu);
+        }
 
-      const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
-      if (savedSettings) setBranchSettings(JSON.parse(savedSettings));
+        // 2. Orders
+        let loadedOrders: Order[] | null = null;
+        const savedOrdersStr = localStorage.getItem(STORAGE_KEY_ORDERS);
+        if (savedOrdersStr) {
+          try { loadedOrders = JSON.parse(savedOrdersStr); } catch {}
+        }
+        if (!loadedOrders) {
+          loadedOrders = await getFromIDB<Order[]>(STORAGE_KEY_ORDERS);
+        }
+        if (loadedOrders && isMounted) {
+          setOrders(loadedOrders);
+        }
 
-      const savedCoupons = localStorage.getItem(STORAGE_KEY_COUPONS);
-      if (savedCoupons) setCoupons(JSON.parse(savedCoupons));
+        // 3. Branch Settings
+        let loadedSettings: BranchSettings | null = null;
+        const savedSettingsStr = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (savedSettingsStr) {
+          try { loadedSettings = JSON.parse(savedSettingsStr); } catch {}
+        }
+        if (!loadedSettings) {
+          loadedSettings = await getFromIDB<BranchSettings>(STORAGE_KEY_SETTINGS);
+        }
+        if (loadedSettings && isMounted) {
+          setBranchSettings(loadedSettings);
+        }
 
-      const savedCart = localStorage.getItem(STORAGE_KEY_CART);
-      if (savedCart) setCart(JSON.parse(savedCart));
-    } catch (e) {
-      console.error('Failed to load from local storage', e);
+        // 4. Coupons
+        let loadedCoupons: Coupon[] | null = null;
+        const savedCouponsStr = localStorage.getItem(STORAGE_KEY_COUPONS);
+        if (savedCouponsStr) {
+          try { loadedCoupons = JSON.parse(savedCouponsStr); } catch {}
+        }
+        if (!loadedCoupons) {
+          loadedCoupons = await getFromIDB<Coupon[]>(STORAGE_KEY_COUPONS);
+        }
+        if (loadedCoupons && isMounted) {
+          setCoupons(loadedCoupons);
+        }
+
+        // 5. Cart
+        let loadedCart: CartItem[] | null = null;
+        const savedCartStr = localStorage.getItem(STORAGE_KEY_CART);
+        if (savedCartStr) {
+          try { loadedCart = JSON.parse(savedCartStr); } catch {}
+        }
+        if (!loadedCart) {
+          loadedCart = await getFromIDB<CartItem[]>(STORAGE_KEY_CART);
+        }
+        if (loadedCart && isMounted) {
+          setCart(loadedCart);
+        }
+      } catch (e) {
+        console.error('Failed to load local storage:', e);
+      } finally {
+        if (isMounted) {
+          setIsStorageLoaded(true);
+        }
+      }
     }
+
+    loadSavedData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Sync back to LocalStorage
+  // Sync back to LocalStorage & IndexedDB (ONLY after initial load finishes)
   useEffect(() => {
+    if (!isStorageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY_MENU, JSON.stringify(menu));
     } catch (e) {}
-  }, [menu]);
+    saveToIDB(STORAGE_KEY_MENU, menu);
+  }, [menu, isStorageLoaded]);
 
   useEffect(() => {
+    if (!isStorageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
     } catch (e) {}
-  }, [orders]);
+    saveToIDB(STORAGE_KEY_ORDERS, orders);
+  }, [orders, isStorageLoaded]);
 
   useEffect(() => {
+    if (!isStorageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(branchSettings));
     } catch (e) {}
-  }, [branchSettings]);
+    saveToIDB(STORAGE_KEY_SETTINGS, branchSettings);
+  }, [branchSettings, isStorageLoaded]);
 
   useEffect(() => {
+    if (!isStorageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY_COUPONS, JSON.stringify(coupons));
     } catch (e) {}
-  }, [coupons]);
+    saveToIDB(STORAGE_KEY_COUPONS, coupons);
+  }, [coupons, isStorageLoaded]);
 
   useEffect(() => {
+    if (!isStorageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart));
     } catch (e) {}
-  }, [cart]);
+    saveToIDB(STORAGE_KEY_CART, cart);
+  }, [cart, isStorageLoaded]);
 
   // MENU ACTIONS
   const addMenuItem = (newItem: Omit<MenuItem, 'id'>) => {

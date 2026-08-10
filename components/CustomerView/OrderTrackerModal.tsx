@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRestaurant } from '@/context/RestaurantContext';
-import { OrderStatus } from '@/lib/types';
+import { OrderStatus, Order } from '@/lib/types';
+import { openWhatsAppOrderLink } from '@/lib/whatsapp';
 import {
   X,
   Clock,
@@ -15,6 +16,8 @@ import {
   MapPin,
   Flame,
   AlertCircle,
+  MessageSquare,
+  Search,
 } from 'lucide-react';
 
 interface OrderTrackerModalProps {
@@ -25,10 +28,25 @@ interface OrderTrackerModalProps {
 export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, onClose }) => {
   const { orders, lastPlacedOrder, branchSettings } = useRestaurant();
 
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   if (!isOpen) return null;
 
-  // Selected order to view (prefer last placed order if exists, otherwise first order)
-  const currentOrder = lastPlacedOrder || orders[0];
+  // Search logic for finding order by ID or phone number
+  let matchedOrders: Order[] = orders;
+  if (searchQuery.trim()) {
+    const q = searchQuery.trim().toLowerCase();
+    matchedOrders = orders.filter(
+      (o) =>
+        o.id.toLowerCase().includes(q) ||
+        o.customer.phone.includes(q) ||
+        o.customer.name.toLowerCase().includes(q)
+    );
+  }
+
+  // Selected order to view
+  const currentOrder: Order | undefined =
+    matchedOrders.length > 0 ? matchedOrders[0] : lastPlacedOrder || orders[0];
 
   const getStatusStepIndex = (status: OrderStatus) => {
     switch (status) {
@@ -67,17 +85,34 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, on
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-black text-lg sm:text-xl text-amber-300">متابعة حالة الطلب الحالية</h2>
-              <p className="text-xs text-slate-400">تتبع مباشر لطلبك خطوة بخطوة</p>
+              <h2 className="font-black text-lg sm:text-xl text-amber-300">متابعة حالة الطلب</h2>
+              <p className="text-xs text-slate-400">أدخل رقم الطلب أو رقم الهاتف لمتابعة التحديثات</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Search Input Bar */}
+        <div className="p-4 bg-amber-50/80 border-b border-amber-200/80">
+          <label className="block text-xs font-bold text-slate-800 mb-1.5">
+            البحث برقم الطلب (مثال: #ORD-1001) أو رقم الهاتف:
+          </label>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="أدخل رقم الفاتورة / رقم الهاتف لتتبع طلبك..."
+              className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-amber-300 bg-white text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute right-3 pointer-events-none" />
+          </div>
         </div>
 
         {/* Content Body */}
@@ -85,7 +120,8 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, on
           {!currentOrder ? (
             <div className="py-12 text-center text-slate-500">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-              <p className="font-bold text-slate-800">لا يوجد طلبات سابقة حتى الآن</p>
+              <p className="font-bold text-slate-800">لم يتم العثور على طلب بهذا الرقم</p>
+              <p className="text-xs text-slate-500 mt-1">تأكد من إدخال رقم الطلب الصحيح أو رقم الهاتف المستخدم عند الشراء</p>
             </div>
           ) : (
             <>
@@ -159,9 +195,25 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({ isOpen, on
                 {currentOrder.customer.notes && <p><strong>ملاحظات:</strong> {currentOrder.customer.notes}</p>}
               </div>
 
-              {/* Items Breakdown */}
-              <div>
-                <h4 className="font-extrabold text-xs text-slate-900 mb-2">الأصناف المطلوبة ({currentOrder.items.length}):</h4>
+              {/* Items Breakdown & WhatsApp Share */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-extrabold text-xs text-slate-900">الأصناف المطلوبة ({currentOrder.items.length}):</h4>
+                  <button
+                    onClick={() =>
+                      openWhatsAppOrderLink(
+                        currentOrder,
+                        branchSettings.whatsappNumber || branchSettings.phone || '201012345678',
+                        branchSettings.siteName || 'كشري هند'
+                      )
+                    }
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 fill-white text-emerald-600" />
+                    <span>إرسال تفاصيل الفاتورة عبر الواتساب 📱</span>
+                  </button>
+                </div>
+
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                   {currentOrder.items.map((item, i) => (
                     <div key={i} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-white border border-slate-200">

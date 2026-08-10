@@ -74,6 +74,8 @@ export interface Coupon {
 
 export interface BranchSettings {
   name: string;
+  siteName?: string;
+  whatsappNumber?: string;
   address: string;
   phone: string;
   isOpen: boolean;

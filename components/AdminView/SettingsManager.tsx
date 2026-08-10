@@ -111,7 +111,18 @@ export const SettingsManager: React.FC = () => {
         <form onSubmit={handleSaveSettings} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">اسم الفرع الرئيسي</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">اسم المتجر / العلامة التجارية (تظهر في الهيدر والفووتر)</label>
+              <input
+                type="text"
+                value={formSettings.siteName || ''}
+                onChange={(e) => setFormSettings({ ...formSettings, siteName: e.target.value })}
+                placeholder="مثال: كشري هند"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500 font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">اسم الفرع الرئيسي التفصيلي</label>
               <input
                 type="text"
                 value={formSettings.name}
@@ -119,14 +130,28 @@ export const SettingsManager: React.FC = () => {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">الخط الساخن للطلب</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">الخط الساخن للطلب (يظهر أعلى الهيدر والفووتر)</label>
               <input
                 type="text"
                 value={formSettings.phone}
                 onChange={(e) => setFormSettings({ ...formSettings, phone: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500 font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">رقم الواتساب لاستقبال الطلبات Direct WhatsApp</label>
+              <input
+                type="text"
+                value={formSettings.whatsappNumber || ''}
+                onChange={(e) => setFormSettings({ ...formSettings, whatsappNumber: e.target.value })}
+                placeholder="مثال: 201012345678"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500 font-bold text-left"
+                dir="ltr"
               />
             </div>
           </div>

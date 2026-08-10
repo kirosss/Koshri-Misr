@@ -129,7 +129,7 @@ export const ReportsAnalytics: React.FC = () => {
 
               <div className="text-left">
                 <span className="font-black text-amber-700 text-sm block">
-                  {Math.floor(Math.random() * 30 + 15)} طلب
+                  {(4 - idx) * 15 + 18} طلب
                 </span>
                 <span className="text-[10px] text-emerald-600 font-bold">ممتاز</span>
               </div>

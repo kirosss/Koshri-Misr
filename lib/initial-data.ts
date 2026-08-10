@@ -2,6 +2,8 @@ import { MenuItem, BranchSettings, Coupon, Order } from './types';
 
 export const INITIAL_BRANCH_SETTINGS: BranchSettings = {
   name: 'مطعم كشري هند - الفرع الرئيسي',
+  siteName: 'كشري هند',
+  whatsappNumber: '201012345678',
   address: 'شارع الحجاز - مصر الجديدة / فرع وسط البلد',
   phone: '19876',
   isOpen: true,

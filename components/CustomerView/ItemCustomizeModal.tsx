@@ -21,6 +21,7 @@ export const ItemCustomizeModal: React.FC<ItemCustomizeModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  const [prevItemId, setPrevItemId] = useState<string | null>(item?.id || null);
   const [selectedSize, setSelectedSize] = useState<SizeOption | undefined>(
     item?.sizes && item.sizes.length > 0 ? item.sizes[0] : undefined
   );
@@ -28,14 +29,13 @@ export const ItemCustomizeModal: React.FC<ItemCustomizeModalProps> = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [notes, setNotes] = useState<string>('');
 
-  useEffect(() => {
-    if (item) {
-      setSelectedSize(item.sizes && item.sizes.length > 0 ? item.sizes[0] : undefined);
-      setSelectedAddons([]);
-      setQuantity(1);
-      setNotes('');
-    }
-  }, [item]);
+  if (item && item.id !== prevItemId) {
+    setPrevItemId(item.id);
+    setSelectedSize(item.sizes && item.sizes.length > 0 ? item.sizes[0] : undefined);
+    setSelectedAddons([]);
+    setQuantity(1);
+    setNotes('');
+  }
 
   if (!item) return null;
 

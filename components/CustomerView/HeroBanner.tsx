@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRestaurant } from '@/context/RestaurantContext';
 import { Search, Flame, Truck, Award, Sparkles, ChefHat } from 'lucide-react';
 
 interface HeroBannerProps {
@@ -14,6 +15,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   searchQuery,
   setSearchQuery,
 }) => {
+  const { branchSettings } = useRestaurant();
+  const siteName = branchSettings.siteName || 'كشري هند';
+
   return (
     <div className="relative bg-white text-slate-900 rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm my-4 sm:my-6 p-6 sm:p-10">
       <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -27,16 +31,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
               <Flame className="w-3.5 h-3.5" />
-              صلصة هند المسبكة المخصوصة
+              صلصة {siteName} المسبكة المخصوصة
             </span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-            أحلى طبق كشري وطواجن <span className="text-orange-500">في مصر</span>
+            أحلى طبق كشري وطواجن <span className="text-orange-500">من {siteName}</span>
           </h1>
 
           <p className="text-slate-600 text-sm sm:text-base font-medium leading-relaxed max-w-xl">
-            اطلب أونلاين الآن من كشري هند وتذوق أشهى أطباق الكشري الساخنة، الطواجن الفرن، الإضافات المقرمشة والحلويات المميزة مع توصيل صاروخي لحد باب البيت.
+            اطلب أونلاين الآن من {siteName} وتذوق أشهى أطباق الكشري الساخنة، الطواجن الفرن، الإضافات المقرمشة والحلويات المميزة مع توصيل صاروخي لحد باب البيت.
           </p>
 
           {/* Search Input */}

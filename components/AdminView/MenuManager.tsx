@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRestaurant } from '@/context/RestaurantContext';
 import { MenuItem, CategoryType } from '@/lib/types';
 import { CATEGORIES } from '@/components/CustomerView/CategoryTabs';
+import { compressImageFile } from '@/lib/image-compression';
 import {
   Plus,
   Edit2,
@@ -14,6 +15,9 @@ import {
   X,
   Check,
   UtensilsCrossed,
+  Upload,
+  Image as ImageIcon,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 export const MenuManager: React.FC = () => {
@@ -23,6 +27,7 @@ export const MenuManager: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   // Form state
   const [formState, setFormState] = useState<Partial<MenuItem>>({
@@ -43,7 +48,30 @@ export const MenuManager: React.FC = () => {
     return matchesCat && matchesQuery;
   });
 
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 15 * 1024 * 1024) {
+        alert('حجم الملف كبير، يرجى اختيار صورة أقل من 15 ميجابايت');
+        return;
+      }
+      setIsUploadingImage(true);
+      try {
+        const compressedBase64 = await compressImageFile(file, 600, 600, 0.75);
+        setFormState((prev) => ({ ...prev, image: compressedBase64 }));
+      } catch (err) {
+        console.error('Failed to compress image', err);
+        alert('حدث خطأ أثناء معالجة الصورة، يرجى المحاولة مرة أخرى');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+  };
+
   const handleOpenAddModal = () => {
+    setShowUrlInput(false);
     setFormState({
       name: '',
       description: '',
@@ -59,6 +87,7 @@ export const MenuManager: React.FC = () => {
   };
 
   const handleOpenEditModal = (item: MenuItem) => {
+    setShowUrlInput(false);
     setEditingItem(item);
     setFormState({ ...item });
   };
@@ -248,13 +277,73 @@ export const MenuManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">رابط صورة الطبق (Image URL)</label>
-                <input
-                  type="url"
-                  value={formState.image}
-                  onChange={(e) => setFormState({ ...formState, image: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-amber-500"
-                />
+                <label className="block font-bold text-slate-700 mb-1">صورة الطبق (رفع من الجهاز) *</label>
+                
+                <div className="space-y-2">
+                  {/* Live Image Preview */}
+                  {formState.image && (
+                    <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center group">
+                      <img
+                        src={formState.image}
+                        alt="معاينة الصورة"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label
+                          htmlFor="dish-file-input"
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs cursor-pointer hover:bg-amber-400 flex items-center gap-1.5 shadow-md"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>رفع صورة جديدة</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="dish-file-input"
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 hover:bg-amber-100/80 text-amber-900 font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs ${
+                        isUploadingImage ? 'opacity-60 pointer-events-none' : ''
+                      }`}
+                    >
+                      <Upload className="w-4 h-4 text-amber-600 animate-bounce" />
+                      <span>
+                        {isUploadingImage
+                          ? 'جاري ضغط وضبط الصورة بوضوح ممتاز...'
+                          : 'اختر صورة من جهازك / استوديو الصور 📸'}
+                      </span>
+                      <input
+                        id="dish-file-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(!showUrlInput)}
+                      className="px-3 py-3 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0"
+                      title="رابط صورة مباشر"
+                    >
+                      <LinkIcon className="w-4 h-4 text-slate-600" />
+                      <span>{showUrlInput ? 'إخفاء الرابط' : 'رابط URL'}</span>
+                    </button>
+                  </div>
+
+                  {showUrlInput && (
+                    <input
+                      type="text"
+                      value={formState.image || ''}
+                      onChange={(e) => setFormState({ ...formState, image: e.target.value })}
+                      placeholder="أدخل رابط الصورة المباشر https://..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-amber-500 text-xs"
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-4 pt-2">

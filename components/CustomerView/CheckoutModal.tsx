@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRestaurant } from '@/context/RestaurantContext';
 import { OrderType, PaymentMethod, CustomerInfo } from '@/lib/types';
+import { openWhatsAppOrderLink } from '@/lib/whatsapp';
 import {
   X,
   Truck,
@@ -16,7 +17,7 @@ import {
   Phone,
   User,
   Clock,
-  ShieldCheck,
+  MessageSquare,
   Flame,
 } from 'lucide-react';
 
@@ -63,17 +64,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleProcessOrder = (sendToWhatsApp: boolean = false) => {
     if (!validate()) return;
 
     setIsSubmitting(true);
 
     setTimeout(() => {
-      placeOrder(formData, orderType, paymentMethod);
+      const createdOrder = placeOrder(formData, orderType, paymentMethod);
+      if (sendToWhatsApp && createdOrder) {
+        openWhatsAppOrderLink(
+          createdOrder,
+          branchSettings.whatsappNumber || branchSettings.phone || '201012345678',
+          branchSettings.siteName || 'كشري هند'
+        );
+      }
       setIsSubmitting(false);
       onClose();
-    }, 800);
+    }, 600);
+  };
+
+  const handleSubmitOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleProcessOrder(true); // Default form submit sends via WhatsApp
   };
 
   const finalDeliveryFee = orderType === 'delivery' ? branchSettings.deliveryFee : 0;
@@ -111,11 +123,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
             <label className="block text-xs sm:text-sm font-extrabold text-slate-900 mb-2">
               طريقة استلام الطلب
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setOrderType('delivery')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-xs font-extrabold ${
+                className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-xs font-extrabold ${
                   orderType === 'delivery'
                     ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-500/30'
                     : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-300'
@@ -129,7 +141,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={() => setOrderType('pickup')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-xs font-extrabold ${
+                className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-xs font-extrabold ${
                   orderType === 'pickup'
                     ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-500/30'
                     : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-300'
@@ -138,20 +150,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
                 <Store className="w-5 h-5" />
                 <span>استلام من الفرع</span>
                 <span className="text-[10px] font-normal text-slate-800">(مجاناً)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setOrderType('dinein')}
-                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-xs font-extrabold ${
-                  orderType === 'dinein'
-                    ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-500/30'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-300'
-                }`}
-              >
-                <Utensils className="w-5 h-5" />
-                <span>تناول بالفرع</span>
-                <span className="text-[10px] font-normal text-slate-800">(في الصالة)</span>
               </button>
             </div>
           </div>
@@ -250,54 +248,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
             <label className="block text-xs sm:text-sm font-extrabold text-slate-900 mb-2">
               طريقة الدفع
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('cash')}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 transition-all text-xs font-bold ${
-                  paymentMethod === 'cash'
-                    ? 'bg-amber-50 border-amber-500 text-slate-900 ring-2 ring-amber-500/20'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300'
-                }`}
-              >
-                <Banknote className="w-5 h-5 text-emerald-600" />
-                <div className="text-right">
-                  <span className="block font-black">الدفع كاش</span>
-                  <span className="text-[10px] text-slate-500">عند الاستلام</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('vodafone_cash')}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 transition-all text-xs font-bold ${
-                  paymentMethod === 'vodafone_cash'
-                    ? 'bg-amber-50 border-amber-500 text-slate-900 ring-2 ring-amber-500/20'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300'
-                }`}
-              >
-                <Wallet className="w-5 h-5 text-red-600" />
-                <div className="text-right">
-                  <span className="block font-black">فودافون كاش</span>
-                  <span className="text-[10px] text-slate-500">تحويل محفظة</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('card')}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 transition-all text-xs font-bold ${
-                  paymentMethod === 'card'
-                    ? 'bg-amber-50 border-amber-500 text-slate-900 ring-2 ring-amber-500/20'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300'
-                }`}
-              >
-                <CreditCard className="w-5 h-5 text-blue-600" />
-                <div className="text-right">
-                  <span className="block font-black">فيزا / ماستركارد</span>
-                  <span className="text-[10px] text-slate-500">دفع إلكتروني</span>
-                </div>
-              </button>
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-400 text-slate-900 flex items-center gap-3">
+              <Banknote className="w-6 h-6 text-emerald-600 shrink-0" />
+              <div className="text-right">
+                <span className="block font-black text-xs sm:text-sm">الدفع كاش نقداً عند الاستلام 💵</span>
+                <span className="text-[10px] text-slate-600">تسليم المبلغ المباشر لمندوب التوصيل أو بالفرع</span>
+              </div>
             </div>
           </div>
 
@@ -317,21 +273,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-amber-500 to-amber-600 text-slate-950 font-black text-base sm:text-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-amber-500/20"
-          >
-            {isSubmitting ? (
-              <span>جاري إرسال الطلب للمطعم...</span>
-            ) : (
-              <>
-                <Flame className="w-5 h-5 fill-slate-950" />
-                <span>تأكيد وإرسال الطلب الآن ({finalTotal} ج.م)</span>
-              </>
-            )}
-          </button>
+          {/* Submit Action Button */}
+          <div className="pt-1">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-base sm:text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-600/20 active:scale-98 cursor-pointer"
+            >
+              <MessageSquare className="w-5 h-5 fill-white text-emerald-600" />
+              <span>تأكيد وإرسال الطلب ({finalTotal} ج.م) 📱</span>
+            </button>
+          </div>
         </form>
 
       </div>

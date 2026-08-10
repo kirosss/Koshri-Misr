@@ -11,15 +11,8 @@ import { CartSlideover } from '@/components/CustomerView/CartSlideover';
 import { CheckoutModal } from '@/components/CustomerView/CheckoutModal';
 import { OrderTrackerModal } from '@/components/CustomerView/OrderTrackerModal';
 
-import { AdminHeader } from '@/components/AdminView/AdminHeader';
-import { OverviewDashboard } from '@/components/AdminView/OverviewDashboard';
-import { OrdersManager } from '@/components/AdminView/OrdersManager';
-import { MenuManager } from '@/components/AdminView/MenuManager';
-import { ReportsAnalytics } from '@/components/AdminView/ReportsAnalytics';
-import { SettingsManager } from '@/components/AdminView/SettingsManager';
-
 import { MenuItem, CategoryType } from '@/lib/types';
-import { ShoppingBag, Phone, MapPin, Clock, Flame, Store, ChevronLeft } from 'lucide-react';
+import { ShoppingBag, Phone, MapPin, Clock, Flame, ChevronLeft } from 'lucide-react';
 
 function AppContent() {
   const {
@@ -62,83 +55,68 @@ function AppContent() {
       {/* Navigation Header */}
       <Navbar onOpenCart={() => setIsCartOpen(true)} />
 
-      {/* Main Body */}
+      {/* Main Body - Customer Store */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        
-        {viewMode === 'customer' ? (
-          <div>
-            {/* Customer Front Store Views */}
-            <HeroBanner
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
+        <div>
+          {/* Customer Front Store Views */}
+          <HeroBanner
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
 
-            {/* Category Slider Tabs */}
-            <CategoryTabs
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              counts={categoryCounts}
-            />
+          {/* Category Slider Tabs */}
+          <CategoryTabs
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            counts={categoryCounts}
+          />
 
-            {/* Closed Branch Alert Banner */}
-            {!branchSettings.isOpen && (
-              <div className="my-4 p-4 rounded-2xl bg-red-900 text-white border border-red-700 flex items-center justify-between text-xs sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-amber-400" />
-                  <span>{branchSettings.closingMessage}</span>
-                </div>
-                <span className="font-bold text-amber-300">مغلق حالياً</span>
+          {/* Closed Branch Alert Banner */}
+          {!branchSettings.isOpen && (
+            <div className="my-4 p-4 rounded-2xl bg-red-900 text-white border border-red-700 flex items-center justify-between text-xs sm:text-sm">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-400" />
+                <span>{branchSettings.closingMessage}</span>
               </div>
-            )}
-
-            {/* Menu Items Grid Header */}
-            <div className="flex items-center justify-between my-4">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {selectedCategory === 'all' ? 'كافة الأصناف والأطباق' : 'أطباق قسم ' + selectedCategory}
-              </h2>
-              <span className="text-xs text-slate-600 font-bold bg-slate-200/80 px-3 py-1 rounded-full">
-                {filteredItems.length} صنف متوفر
-              </span>
+              <span className="font-bold text-amber-300">مغلق حالياً</span>
             </div>
+          )}
 
-            {/* Menu Grid */}
-            {filteredItems.length === 0 ? (
-              <div className="py-16 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 shadow-xs">
-                <p className="font-bold text-base mb-1">لا توجد نتائج تطابق "{searchQuery}"</p>
-                <p className="text-xs text-slate-400">جرب البحث بكلمة مختلفة أو اختر قسم آخر من المنيو</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                {filteredItems.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    onSelect={(i) => setCustomizingItem(i)}
-                  />
-                ))}
-              </div>
-            )}
-
+          {/* Menu Items Grid Header */}
+          <div className="flex items-center justify-between my-4">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {selectedCategory === 'all' ? 'كافة الأصناف والأطباق' : 'أطباق قسم ' + selectedCategory}
+            </h2>
+            <span className="text-xs text-slate-600 font-bold bg-slate-200/80 px-3 py-1 rounded-full">
+              {filteredItems.length} صنف متوفر
+            </span>
           </div>
-        ) : (
-          <div className="py-6 space-y-6">
-            {/* Admin Control Dashboard Views */}
-            <AdminHeader />
 
-            {adminTab === 'overview' && <OverviewDashboard />}
-            {adminTab === 'orders' && <OrdersManager />}
-            {adminTab === 'menu' && <MenuManager />}
-            {adminTab === 'reports' && <ReportsAnalytics />}
-            {adminTab === 'settings' && <SettingsManager />}
-          </div>
-        )}
+          {/* Menu Grid */}
+          {filteredItems.length === 0 ? (
+            <div className="py-16 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 shadow-xs">
+              <p className="font-bold text-base mb-1">لا توجد نتائج تطابق &quot;{searchQuery}&quot;</p>
+              <p className="text-xs text-slate-400">جرب البحث بكلمة مختلفة أو اختر قسم آخر من المنيو</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {filteredItems.map((item) => (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  onSelect={(i) => setCustomizingItem(i)}
+                />
+              ))}
+            </div>
+          )}
 
+        </div>
       </main>
 
       {/* Customer Floating Mobile Sticky Cart Bar */}
-      {viewMode === 'customer' && cartCount > 0 && (
+      {cartCount > 0 && (
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-lg mx-auto sm:hidden animate-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => setIsCartOpen(true)}
@@ -163,7 +141,10 @@ function AppContent() {
       <ItemCustomizeModal
         item={customizingItem}
         onClose={() => setCustomizingItem(null)}
-        onAddToCart={addToCart}
+        onAddToCart={(item, size, addons, quantity, notes) => {
+          addToCart(item, size, addons, quantity, notes);
+          setIsCartOpen(true);
+        }}
       />
 
       <CartSlideover
@@ -186,10 +167,10 @@ function AppContent() {
       <footer className="bg-slate-950 text-slate-400 py-10 border-t border-amber-500/20 text-xs mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <div className="flex flex-wrap items-center justify-center gap-6 text-slate-300 font-bold">
-            <span className="flex items-center gap-1.5">
+            <a href={`tel:${branchSettings.phone}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors">
               <Phone className="w-4 h-4 text-amber-400" />
-              الخط الساخن: {branchSettings.phone}
-            </span>
+              <span>الخط الساخن: <strong className="text-white">{branchSettings.phone}</strong></span>
+            </a>
             <span className="flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-amber-400" />
               {branchSettings.address}
@@ -200,9 +181,11 @@ function AppContent() {
             </span>
           </div>
 
-          <p className="text-slate-500">
-            © {new Date().getFullYear()} مطعم كشري هند. جميع الحقوق محفوظة. تطبيق وتصميم طلبات الأونلاين ولوحة الإدارة.
-          </p>
+          <div className="flex items-center justify-center gap-4 text-slate-500 text-[11px] pt-2">
+            <p>
+              © {new Date().getFullYear()} مطعم {branchSettings.siteName || 'كشري هند'}. جميع الحقوق محفوظة.
+            </p>
+          </div>
         </div>
       </footer>
 
